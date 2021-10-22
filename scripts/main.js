@@ -42,10 +42,59 @@ window.onload = () => {
     gl.vertexAttribPointer(aColor, 3, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
     gl.enableVertexAttribArray(aColor);
 
+    const uTranslationMatrix = gl.getUniformLocation(shaderProgram, "uTranslationMatrix");
 
-    gl.clearColor(0.9, 0.9, 0.9, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    const speed = 0.0140
+    let moveDir = 1 // 1 untuk ke atas, -1 untuk ke bawah
+    let dy = 0;
 
-    gl.drawArrays(gl.TRIANGLE_FAN, 0, verticesFront.length / 5);
-    gl.drawArrays(gl.TRIANGLE_FAN, verticesFront.length / 5, verticesLeft.length / 5);
+    let paused = false;
+
+    window.onkeyup = (e) => {
+        if (e.code === 'Space') paused = !paused;
+
+        /**
+         *  @type {HTMLParagraphElement} info
+         */
+        const info = document.getElementById("info");
+        
+        const str = info.innerHTML;
+        const res = paused ? str.replace("pause", "resume") : str.replace("resume", "pause");
+
+        info.innerHTML = res;
+    };
+
+    function render() {
+        if (!paused) {
+            moveDir = dy >= 0.605 || dy <= -0.627 ? -moveDir : moveDir;
+            dy += speed * moveDir;
+
+            const translationMatrixLeft = [
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1,
+            ];
+
+            const translationMatrixRight = [
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, dy, 0, 1,
+            ];
+
+            gl.clearColor(0.9, 0.9, 0.9, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+            gl.uniformMatrix4fv(uTranslationMatrix, false, translationMatrixLeft);
+            gl.drawArrays(gl.TRIANGLE_FAN, 0, verticesFront.length / 5);
+
+            gl.uniformMatrix4fv(uTranslationMatrix, false, translationMatrixRight);
+            gl.drawArrays(gl.TRIANGLE_FAN, verticesFront.length / 5, verticesLeft.length / 5);
+        }
+
+        requestAnimationFrame(render);
+    }
+
+    requestAnimationFrame(render);
 }

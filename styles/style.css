@@ -1,4 +1,5 @@
-html, body {
+html,
+body {
     margin: 0;
     padding: 0;
     height: 100%;
@@ -8,4 +9,11 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-direction: column;
+}
+
+kbd {
+    border-radius: 2px;
+    padding: 2px;
+    border: 1px solid black;
 }
