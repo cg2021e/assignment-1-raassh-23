@@ -1,7 +1,7 @@
 import { vertexShaderCode } from './vertexShaderCode.js';
 import { fragmentShaderCode } from './fragmentShaderCode.js';
-import { verticesFront } from './verticesFront.js';
-import { verticesLeft } from './verticesLeft.js';
+import { verticesFrontBack, verticesFrontMiddle, verticesFrontFront } from './verticesFront.js';
+import { verticesLeftBack, verticesLeftMiddle, verticesLeftFront } from './verticesLeft.js';
 
 window.onload = () => {
     /**
@@ -14,7 +14,15 @@ window.onload = () => {
      */
     const gl = canvas.getContext("webgl");
 
-    const vertices = [...verticesFront, ...verticesLeft]
+    const vertices = [
+        ...verticesFrontBack, ...verticesFrontMiddle, ...verticesFrontFront,
+        ...verticesLeftBack, ...verticesLeftMiddle, ...verticesLeftFront,
+    ]
+
+    const verticesCount = [
+        verticesFrontBack.length, verticesFrontMiddle.length, verticesFrontFront.length,
+        verticesLeftBack.length, verticesLeftMiddle.length, verticesLeftFront.length,
+    ]
 
     const buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -83,14 +91,21 @@ window.onload = () => {
                 0, dy, 0, 1,
             ];
 
-            gl.clearColor(0.9, 0.9, 0.9, 1.0);
+            gl.clearColor(0.8, 0.8, 0.8, 1.0);
             gl.clear(gl.COLOR_BUFFER_BIT);
 
-            gl.uniformMatrix4fv(uTranslationMatrix, false, translationMatrixLeft);
-            gl.drawArrays(gl.TRIANGLE_FAN, 0, verticesFront.length / 5);
+            const rightStartIndex = 3;
+            let start = 0;
 
-            gl.uniformMatrix4fv(uTranslationMatrix, false, translationMatrixRight);
-            gl.drawArrays(gl.TRIANGLE_FAN, verticesFront.length / 5, verticesLeft.length / 5);
+            verticesCount.forEach((verticeCount, i) => {
+                const count = verticeCount / 5;
+                const translationMatrix = i < rightStartIndex ? translationMatrixLeft : translationMatrixRight;
+
+                gl.uniformMatrix4fv(uTranslationMatrix, false, translationMatrix);
+                gl.drawArrays(gl.TRIANGLE_FAN, start, count);
+
+                start += count;
+            });
         }
 
         requestAnimationFrame(render);
