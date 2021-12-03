@@ -1,7 +1,6 @@
 import { vertexShaderCode } from './vertexShaderCode.js';
 import { fragmentShaderCode } from './fragmentShaderCode.js';
-import { verticesFrontBack, verticesFrontMiddle, verticesFrontFront } from './verticesFront.js';
-import { verticesLeftBack, verticesLeftMiddle, verticesLeftFront } from './verticesLeft.js';
+import { vertices } from './vertices.js';
 
 window.onload = () => {
     /**
