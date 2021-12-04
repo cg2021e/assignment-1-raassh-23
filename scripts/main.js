@@ -136,11 +136,11 @@ window.onload = () => {
     const models = [mat4.create(), mat4.create(), mat4.create()];
 
     // model for left 
-    mat4.translate(models[0], models[0], [-0.8, 0, 0]);
+    mat4.translate(models[0], models[0], [-0.9, 0, 0]);
 
     // model for right
-    mat4.translate(models[1], models[1], [0.8, 0, 0]);
-    // mat4.rotateY(models[1], models[1], Math.PI / 2);
+    mat4.translate(models[1], models[1], [0.9, 0, 0]);
+    mat4.rotateY(models[1], models[1], -Math.PI / 2);
 
     // for each model
     const shininessConstants = [5, 500, 0];
@@ -174,7 +174,7 @@ window.onload = () => {
                 gl.uniform1f(uAmbientIntensity, ambientIntensities[i]);
 
                 // gl.drawElements(gl.TRIANGLE_STRIP, indicesCount[i], gl.UNSIGNED_SHORT, count * Uint16Array.BYTES_PER_ELEMENT);
-                gl.drawArrays(gl.TRIANGLE_STRIP, count, indicesCount[i]);
+                gl.drawArrays(gl.TRIANGLES, count, indicesCount[i]);
                 count += indicesCount[i]; 
             });
         }
