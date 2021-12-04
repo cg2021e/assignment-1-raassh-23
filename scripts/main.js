@@ -98,22 +98,8 @@ window.onload = () => {
     gl.uniform1f(uScale, 0.7);
 
     let paused = false;
-    const camera = [0, 0, 3];
+    const camera = [0, 1, 3];
     const lightCube = [0, 0, 0]
-
-    window.onkeyup = (e) => {
-        if (e.code === 'Space') paused = !paused;
-
-        /**
-         *  @type {HTMLParagraphElement} info
-         */
-        const info = document.getElementById("info");
-
-        const str = info.innerHTML;
-        const res = paused ? str.replace("pause", "resume") : str.replace("resume", "pause");
-
-        info.innerHTML = res;
-    };
 
     window.onkeydown = (e) => {
         if (e.code === 'KeyD') camera[0] += 0.05;
@@ -124,13 +110,11 @@ window.onload = () => {
 
         if (e.code === 'KeyS') lightCube[1] -= 0.05;
 
-        if (e.code === 'ArrowUp') lightCube[2] -= 0.05;
-
-        if (e.code === 'ArrowDown') lightCube[2] += 0.05;
-
-        if (e.code === 'ArrowLeft') lightCube[0] -= 0.05;
-
-        if (e.code === 'ArrowRight') lightCube[0] += 0.05;
+        // Uncomment these to be able to move the light cube forward/bacward and left/right
+        // if (e.code === 'ArrowUp') lightCube[2] -= 0.05;
+        // if (e.code === 'ArrowDown') lightCube[2] += 0.05;
+        // if (e.code === 'ArrowLeft') lightCube[0] -= 0.05;
+        // if (e.code === 'ArrowRight') lightCube[0] += 0.05;
     }
 
     const models = [mat4.create(), mat4.create(), mat4.create()];
@@ -147,37 +131,35 @@ window.onload = () => {
     const ambientIntensities = [0.340, 0.340, 1];
 
     function render() {
-        if (!paused) {
-            const view = mat4.create();
-            mat4.lookAt(view, camera, [camera[0], 0, 0], [0, 1, 0]);
-            gl.uniformMatrix4fv(uView, false, view);
-            gl.uniform3fv(uViewerPosition, camera);
-            gl.uniform3fv(uLightPosition, lightCube);
+        const view = mat4.create();
+        mat4.lookAt(view, camera, [camera[0], 0, 0], [0, 1, 0]);
+        gl.uniformMatrix4fv(uView, false, view);
+        gl.uniform3fv(uViewerPosition, camera);
+        gl.uniform3fv(uLightPosition, lightCube);
 
-            gl.enable(gl.DEPTH_TEST);
-            gl.clearColor(0.9, 0.9, 0.9, 1.0);
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.enable(gl.DEPTH_TEST);
+        gl.clearColor(0.9, 0.9, 0.9, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-            // model for cube
-            models[2] = mat4.create();
-            mat4.translate(models[2], models[2], lightCube);
+        // model for cube
+        models[2] = mat4.create();
+        mat4.translate(models[2], models[2], lightCube);
 
-            let count = 0;
-            indicesCount.forEach((v, i) => {
-                gl.uniformMatrix4fv(uModel, false, models[i]);
+        let count = 0;
+        indicesCount.forEach((v, i) => {
+            gl.uniformMatrix4fv(uModel, false, models[i]);
 
-                const normalModel = mat3.create();
-                mat3.normalFromMat4(normalModel, models[i]);
-                gl.uniformMatrix3fv(uNormalModel, false, normalModel);
+            const normalModel = mat3.create();
+            mat3.normalFromMat4(normalModel, models[i]);
+            gl.uniformMatrix3fv(uNormalModel, false, normalModel);
 
-                gl.uniform1f(uShininessConstant, shininessConstants[i]);
-                gl.uniform1f(uAmbientIntensity, ambientIntensities[i]);
+            gl.uniform1f(uShininessConstant, shininessConstants[i]);
+            gl.uniform1f(uAmbientIntensity, ambientIntensities[i]);
 
-                // gl.drawElements(gl.TRIANGLE_STRIP, indicesCount[i], gl.UNSIGNED_SHORT, count * Uint16Array.BYTES_PER_ELEMENT);
-                gl.drawArrays(gl.TRIANGLES, count, indicesCount[i]);
-                count += indicesCount[i]; 
-            });
-        }
+            // gl.drawElements(gl.TRIANGLE_STRIP, indicesCount[i], gl.UNSIGNED_SHORT, count * Uint16Array.BYTES_PER_ELEMENT);
+            gl.drawArrays(gl.TRIANGLES, count, indicesCount[i]);
+            count += indicesCount[i];
+        });
 
         requestAnimationFrame(render);
     }

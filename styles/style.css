@@ -18,3 +18,8 @@ kbd {
     padding: 2px;
     border: 1px solid black;
 }
+
+.info {
+    margin-top: 10px;
+    margin-bottom: 0;
+}
