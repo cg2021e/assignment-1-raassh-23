@@ -1,8 +1,9 @@
 import { vertexShaderCode } from './vertexShaderCode.js';
 import { fragmentShaderCode } from './fragmentShaderCode.js';
-import { vertices } from './vertices.js';
-import { indices } from './indices.js';
+import { verticesEraser, verticesCube } from './vertices.js';
+import { indicesEraser, indicesCube } from './indices.js';
 import { mat4, mat3 } from "./gl-matrix/index.js";
+import { mergeVerticesAndIndices } from "./utils.js";
 
 window.onload = () => {
     /**
@@ -14,6 +15,15 @@ window.onload = () => {
      *  @type {WebGLRenderingContext} gl 
      */
     const gl = canvas.getContext("webgl");
+
+    const [vertices, indicesCount, indices] = mergeVerticesAndIndices(
+                                                    [verticesEraser, indicesEraser], 
+                                                    [verticesEraser, indicesEraser], 
+                                                    [verticesCube, indicesCube]
+                                                );
+
+
+    console.log([vertices, indicesCount, indices]);
 
     const buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -74,10 +84,8 @@ window.onload = () => {
     const uLightConstant = gl.getUniformLocation(shaderProgram, "uLightConstant");
     const uAmbientIntensity = gl.getUniformLocation(shaderProgram, "uAmbientIntensity");
     gl.uniform3fv(uLightConstant, [1, 1, 1]);
-    gl.uniform1f(uAmbientIntensity, 0.340);
 
     const uLightPosition = gl.getUniformLocation(shaderProgram, "uLightPosition");
-    gl.uniform3fv(uLightPosition, [0.0, 0.0, 2.0]);
 
     const uNormalModel = gl.getUniformLocation(shaderProgram, "uNormalModel");
 
@@ -87,10 +95,11 @@ window.onload = () => {
 
     let paused = false;
     const camera = [0, 0, 3];
+    const lightCube = [0, 0, 0]
 
     window.onkeyup = (e) => {
         if (e.code === 'Space') paused = !paused;
-        
+
         /**
          *  @type {HTMLParagraphElement} info
          */
@@ -106,16 +115,24 @@ window.onload = () => {
         if (e.code === 'KeyD') camera[0] += 0.05;
 
         if (e.code === 'KeyA') camera[0] -= 0.05;
+
+        if (e.code === 'KeyW') lightCube[1] += 0.05;
+
+        if (e.code === 'KeyS') lightCube[1] -= 0.05;
     }
 
-    const model1 = mat4.create();
-    mat4.translate(model1, model1, [-0.8, 0, 0]);
+    const models = [mat4.create(), mat4.create(), mat4.create()];
 
-    const model2 = mat4.create();
-    mat4.translate(model2, model2, [0.8, 0, 0]);
-    mat4.rotateY(model2, model2, Math.PI / 2);
+    // model for left 
+    mat4.translate(models[0], models[0], [-0.8, 0, 0]);
 
-    console.log(vertices, indices);
+    // model for right
+    mat4.translate(models[1], models[1], [0.8, 0, 0]);
+    mat4.rotateY(models[1], models[1], Math.PI / 2);
+
+    // for each model
+    const shininessConstants = [5, 200, 0]; 
+    const ambientIntensities = [0.340, 0.340, 1];
 
     function render() {
         if (!paused) {
@@ -123,32 +140,32 @@ window.onload = () => {
             mat4.lookAt(view, camera, [camera[0], 0, 0], [0, 1, 0]);
             gl.uniformMatrix4fv(uView, false, view);
             gl.uniform3fv(uViewerPosition, camera);
+            gl.uniform3fv(uLightPosition, lightCube);
 
             gl.enable(gl.DEPTH_TEST);
             gl.clearColor(0.9, 0.9, 0.9, 1.0);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-            // draw front
-            gl.uniformMatrix4fv(uModel, false, model1);
+            // model for cube
+            models[2] = mat4.create();
+            mat4.translate(models[2], models[2], lightCube);
 
-            const normalModel1 = mat3.create();
-            mat3.normalFromMat4(normalModel1, model1);
-            gl.uniformMatrix3fv(uNormalModel, false, normalModel1);
+            console.log(models);
 
-            gl.uniform1f(uShininessConstant, 10.0);
+            let count = 0;
+            indicesCount.forEach((v, i) => {
+                gl.uniformMatrix4fv(uModel, false, models[i]);
 
-            gl.drawElements(gl.TRIANGLE_STRIP, indices.length, gl.UNSIGNED_SHORT, 0);
-            
-            // draw side
-            gl.uniformMatrix4fv(uModel, false, model2);
+                const normalModel = mat3.create();
+                mat3.normalFromMat4(normalModel, models[i]);
+                gl.uniformMatrix3fv(uNormalModel, false, normalModel);
 
-            const normalModel2 = mat3.create();
-            mat3.normalFromMat4(normalModel2, model2);
-            gl.uniformMatrix3fv(uNormalModel, false, normalModel2);
+                gl.uniform1f(uShininessConstant, shininessConstants[i]);
+                gl.uniform1f(uAmbientIntensity, ambientIntensities[i]);
 
-            gl.uniform1f(uShininessConstant, 100.0);
-
-            gl.drawElements(gl.TRIANGLE_STRIP, indices.length, gl.UNSIGNED_SHORT, 0);
+                gl.drawElements(gl.TRIANGLE_STRIP, indicesCount[i], gl.UNSIGNED_SHORT, count * Uint16Array.BYTES_PER_ELEMENT);
+                count += indicesCount[i];
+            });
         }
 
         requestAnimationFrame(render);
