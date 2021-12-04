@@ -3,11 +3,11 @@ export const mergeVertices = (...verticesArray) => {
     const returnVertices = []
 
     verticesArray.forEach(vertices => {
-        returnVertices.push(...vertices)
+        returnVertices.push(...vertices.flat())
     });
 
     return returnVertices;
-}
+};
 
 // argument indices1, indices2, ...
 export const mergeIndices = (...indicesArray) => {
@@ -16,16 +16,15 @@ export const mergeIndices = (...indicesArray) => {
     const indexMax = [];
 
     indicesArray.forEach(indices => {
-        indicesCount.push(indices.length);
-        returnIndices.push(...indices.map(index => index + indexMax.reduce((acc, curr) => acc + curr, 0)));
-        console.log(indexMax.reduce((acc, curr) => acc + curr, 0));
-        indexMax.push(Math.max(...indices) + 1);
+        const indicesFlat = indices.flat();
+
+        indicesCount.push(indicesFlat.length);
+        returnIndices.push(...indicesFlat.map(index => index + indexMax.reduce((acc, curr) => acc + curr, 0)));
+        indexMax.push(Math.max(...indicesFlat) + 1);
     });
 
-    console.log(indexMax);
-
     return [indicesCount, returnIndices];
-}
+};
 
 // argument [vertices1, indices1], [vertices2, indices2], ...
 export const mergeVerticesAndIndices = (...verticesAndIndicesArray) => {
@@ -33,4 +32,49 @@ export const mergeVerticesAndIndices = (...verticesAndIndicesArray) => {
     const indiesArray = verticesAndIndicesArray.map(verticesAndIndices => verticesAndIndices[1]);
 
     return [mergeVertices(...verticesArray), ...mergeIndices(...indiesArray)];
-}
+};
+
+export const getFaceSurfaceNormal = (vertices, indices) => { 
+    const surfaceNormal = [0, 0, 0];
+
+    indices.forEach((val, i) => {
+        const curr = vertices[val];
+        const next = vertices[indices[(i + 1) % indices.length]];
+
+        surfaceNormal[0] += (curr[1] - next[1]) * (curr[2] + next[2]);
+        surfaceNormal[1] += (curr[2] - next[2]) * (curr[0] + next[0]);
+        surfaceNormal[2] += (curr[0] - next[0]) * (curr[1] + next[1]);
+    });
+
+    return surfaceNormal;
+};
+
+export const getVerticesWithSurfaceNormal = (vertices, indices) => {
+    const surfaceNormal = [];
+    const verticesWithNormal = [];
+
+    let i = 0;
+    indices.forEach(val => {
+        surfaceNormal.push(getFaceSurfaceNormal(vertices, val));
+        val.forEach(index => {
+            verticesWithNormal.push(...vertices[index], ...(surfaceNormal[i]));
+        })
+        i++;
+    });
+
+    return verticesWithNormal;
+};
+
+// argument [vertices1, indices1], [vertices2, indices2], ...
+export const getAllVerticesWithSurfaceNormal = (...verticesAndIndicesArray) => {
+    const verticesArray = verticesAndIndicesArray.map(verticesAndIndices => verticesAndIndices[0]);
+    const indicesArray = verticesAndIndicesArray.map(verticesAndIndices => verticesAndIndices[1]);
+
+    const surfaceNormalArray = [];
+
+    verticesArray.forEach((vertices, index) => {
+        surfaceNormalArray.push(getVerticesWithSurfaceNormal(vertices, indicesArray[index]));
+    });
+
+    return surfaceNormalArray;
+};

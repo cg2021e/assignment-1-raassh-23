@@ -3,7 +3,7 @@ import { fragmentShaderCode } from './fragmentShaderCode.js';
 import { verticesEraser, verticesCube } from './vertices.js';
 import { indicesEraser, indicesCube } from './indices.js';
 import { mat4, mat3 } from "./gl-matrix/index.js";
-import { mergeVerticesAndIndices } from "./utils.js";
+import { mergeVerticesAndIndices, getAllVerticesWithSurfaceNormal } from "./utils.js";
 
 window.onload = () => {
     /**
@@ -16,18 +16,19 @@ window.onload = () => {
      */
     const gl = canvas.getContext("webgl");
 
-    const [vertices, indicesCount, indices] = mergeVerticesAndIndices(
-                                                    [verticesEraser, indicesEraser], 
-                                                    [verticesEraser, indicesEraser], 
-                                                    [verticesCube, indicesCube]
-                                                );
+    const verticeAndIndices = [
+        [verticesEraser, indicesEraser],
+        [verticesEraser, indicesEraser],
+        [verticesCube, indicesCube],
+    ];
 
-
-    console.log([vertices, indicesCount, indices]);
+    const [, indicesCount, indices] = mergeVerticesAndIndices(...verticeAndIndices);
+    const normals = getAllVerticesWithSurfaceNormal(...verticeAndIndices).flat();
+    console.log(normals);
 
     const buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
 
     const indexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -142,7 +143,7 @@ window.onload = () => {
     // mat4.rotateY(models[1], models[1], Math.PI / 2);
 
     // for each model
-    const shininessConstants = [5, 500, 0]; 
+    const shininessConstants = [5, 500, 0];
     const ambientIntensities = [0.340, 0.340, 1];
 
     function render() {
@@ -161,8 +162,6 @@ window.onload = () => {
             models[2] = mat4.create();
             mat4.translate(models[2], models[2], lightCube);
 
-            console.log(models);
-
             let count = 0;
             indicesCount.forEach((v, i) => {
                 gl.uniformMatrix4fv(uModel, false, models[i]);
@@ -174,8 +173,9 @@ window.onload = () => {
                 gl.uniform1f(uShininessConstant, shininessConstants[i]);
                 gl.uniform1f(uAmbientIntensity, ambientIntensities[i]);
 
-                gl.drawElements(gl.TRIANGLE_STRIP, indicesCount[i], gl.UNSIGNED_SHORT, count * Uint16Array.BYTES_PER_ELEMENT);
-                count += indicesCount[i];
+                // gl.drawElements(gl.TRIANGLE_STRIP, indicesCount[i], gl.UNSIGNED_SHORT, count * Uint16Array.BYTES_PER_ELEMENT);
+                gl.drawArrays(gl.TRIANGLE_STRIP, count, indicesCount[i]);
+                count += indicesCount[i]; 
             });
         }
 
