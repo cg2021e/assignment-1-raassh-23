@@ -1,6 +1,5 @@
 export const fragmentShaderCode = `
     precision mediump float;
-    precision mediump float;
     varying vec3 vColor;
 
     uniform vec3 uLightConstant;
@@ -23,7 +22,7 @@ export const fragmentShaderCode = `
 
         vec3 normalizedLight = normalize(lightDirection);
         vec3 normalizedNormal = normalize(uNormalModel * vNormal);
-        float cosTheta = dot(normalizedLight, normalizedNormal);
+        float cosTheta = dot(normalizedNormal, normalizedLight);
 
         vec3 diffuse = vec3(0.0, 0.0, 0.0);
         if (cosTheta > 0.) {

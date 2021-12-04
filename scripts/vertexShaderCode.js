@@ -12,11 +12,13 @@ export const vertexShaderCode = `
 
     varying vec3 vPosition;
 
+    uniform float uScale;
+
     void main() {
-        gl_Position = uProjection * uView * uModel * (vec4(aPosition / 2.0 , 1.0));
+        gl_Position = uProjection * uView * uModel * (vec4(aPosition * uScale, 1.0));
 
         vColor = aColor;
         vNormal = aNormal;
-        vPosition = (uModel * (vec4(aPosition / 2.0, 1.0))).xyz;
+        vPosition = (uModel * (vec4(aPosition * uScale, 1.0))).xyz;
     }
 `

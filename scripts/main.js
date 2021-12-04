@@ -93,6 +93,9 @@ window.onload = () => {
 
     const uShininessConstant = gl.getUniformLocation(shaderProgram, "uShininessConstant");
 
+    const uScale = gl.getUniformLocation(shaderProgram, "uScale");
+    gl.uniform1f(uScale, 0.7);
+
     let paused = false;
     const camera = [0, 0, 3];
     const lightCube = [0, 0, 0]
@@ -119,6 +122,14 @@ window.onload = () => {
         if (e.code === 'KeyW') lightCube[1] += 0.05;
 
         if (e.code === 'KeyS') lightCube[1] -= 0.05;
+
+        if (e.code === 'ArrowUp') lightCube[2] -= 0.05;
+
+        if (e.code === 'ArrowDown') lightCube[2] += 0.05;
+
+        if (e.code === 'ArrowLeft') lightCube[0] -= 0.05;
+
+        if (e.code === 'ArrowRight') lightCube[0] += 0.05;
     }
 
     const models = [mat4.create(), mat4.create(), mat4.create()];
@@ -128,10 +139,10 @@ window.onload = () => {
 
     // model for right
     mat4.translate(models[1], models[1], [0.8, 0, 0]);
-    mat4.rotateY(models[1], models[1], Math.PI / 2);
+    // mat4.rotateY(models[1], models[1], Math.PI / 2);
 
     // for each model
-    const shininessConstants = [5, 200, 0]; 
+    const shininessConstants = [5, 500, 0]; 
     const ambientIntensities = [0.340, 0.340, 1];
 
     function render() {
