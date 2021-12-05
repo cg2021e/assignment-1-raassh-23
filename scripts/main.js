@@ -92,32 +92,42 @@ window.onload = () => {
     const uScale = gl.getUniformLocation(shaderProgram, "uScale");
     gl.uniform1f(uScale, 0.8);
 
-    const camera = [0, 1, 2];
-    const lightCube = [0, 0, 0]
+    const camera = [0, 1, 3];
+    const lightCube = [0, 0, 1];
+
+    const cameraSpeed = 0.01;
+    let cameraMoveDir = 0; // 0 - nothing, 1 - upward, -1 - downward
+
+    const lightCubeSpeed = 0.01;
+    let lightCubeMoveDir = 0; // 0 - nothing, 1 - right, -1 - left
 
     window.onkeydown = (e) => {
-        if (e.code === 'KeyD') camera[0] += 0.05;
+        if (e.code === 'KeyD') cameraMoveDir = 1;
+        else if (e.code === 'KeyA') cameraMoveDir = -1;
 
-        if (e.code === 'KeyA') camera[0] -= 0.05;
-
-        if (e.code === 'KeyW') lightCube[1] += 0.05;
-
-        if (e.code === 'KeyS') lightCube[1] -= 0.05;
+        if (e.code === 'KeyW') lightCubeMoveDir = 1;
+        else if (e.code === 'KeyS') lightCubeMoveDir = -1;
 
         // Uncomment these to be able to move the light cube forward/bacward and left/right
-        if (e.code === 'ArrowUp') lightCube[2] -= 0.05;
-        if (e.code === 'ArrowDown') lightCube[2] += 0.05;
-        if (e.code === 'ArrowLeft') lightCube[0] -= 0.05;
-        if (e.code === 'ArrowRight') lightCube[0] += 0.05;
+        // if (e.code === 'ArrowUp') lightCube[2] -= 0.05;
+        // if (e.code === 'ArrowDown') lightCube[2] += 0.05;
+        // if (e.code === 'ArrowLeft') lightCube[0] -= 0.05;
+        // if (e.code === 'ArrowRight') lightCube[0] += 0.05;
+    }
+
+    window.onkeyup = (e) => {
+        if (e.code === 'KeyD' || e.code === 'KeyA') cameraMoveDir = 0;
+
+        if (e.code === 'KeyW' || e.code === 'KeyS') lightCubeMoveDir = 0;
     }
 
     const models = [mat4.create(), mat4.create(), mat4.create()];
 
     // model for left 
-    mat4.translate(models[0], models[0], [-0.7, 0, -0.7]);
+    mat4.translate(models[0], models[0], [-0.7, 0, 0]);
 
     // model for right
-    mat4.translate(models[1], models[1], [0.7, 0, -0.7]);
+    mat4.translate(models[1], models[1], [0.7, 0, 0]);
     mat4.rotateY(models[1], models[1], -Math.PI / 2);
 
     // constant for each model
@@ -125,10 +135,13 @@ window.onload = () => {
     const ambientIntensities = [0.340, 0.340, 1];
 
     function render() {
+        camera[0] += cameraMoveDir * cameraSpeed;
         const view = mat4.create();
-        mat4.lookAt(view, camera, [camera[0], 0.25, 0], [0, 1, 0]);
+        mat4.lookAt(view, camera, [camera[0], -0.1, 0], [0, 1, 0]);
         gl.uniformMatrix4fv(uView, false, view);
         gl.uniform3fv(uViewerPosition, camera);
+
+        lightCube[1] += lightCubeMoveDir * lightCubeSpeed;
         gl.uniform3fv(uLightPosition, lightCube);
 
         gl.enable(gl.DEPTH_TEST);
