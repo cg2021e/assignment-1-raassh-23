@@ -1,5 +1,5 @@
 // argument vertices1, vertices2, ...
-export const mergeVertices = (...verticesArray) => { 
+export const mergeVertices = (...verticesArray) => {
     const returnVertices = []
 
     verticesArray.forEach(vertices => {
@@ -34,30 +34,39 @@ export const mergeVerticesAndIndices = (...verticesAndIndicesArray) => {
     return [mergeVertices(...verticesArray), ...mergeIndices(...indiesArray)];
 };
 
-export const getFaceSurfaceNormal = (vertices, indices) => { 
+// argument vertices, indices for a face
+export const getFaceSurfaceNormal = (vertices, indices) => {
     const surfaceNormal = [0, 0, 0];
 
-    indices.forEach((val, i) => {
-        const curr = vertices[val];
-        const next = vertices[indices[(i + 1) % indices.length]];
+    if (indices.length === 3) {
+        const u = vertices[indices[1]].map((val, index) => val - vertices[indices[0]][index]);
+        const v = vertices[indices[2]].map((val, index) => val - vertices[indices[0]][index]);
 
-        surfaceNormal[0] += (curr[1] - next[1]) * (curr[2] + next[2]);
-        surfaceNormal[1] += (curr[2] - next[2]) * (curr[0] + next[0]);
-        surfaceNormal[2] += (curr[0] - next[0]) * (curr[1] + next[1]);
-    });
+        surfaceNormal[0] = u[1] * v[2] - u[2] * v[1];
+        surfaceNormal[1] = u[2] * v[0] - u[0] * v[2];
+        surfaceNormal[2] = u[0] * v[1] - u[1] * v[0];
+    } else {
+        indices.forEach((val, i) => {
+            const curr = vertices[val];
+            const next = vertices[indices[(i + 1) % indices.length]];
+
+            surfaceNormal[0] += (curr[1] - next[1]) * (curr[2] + next[2]);
+            surfaceNormal[1] += (curr[2] - next[2]) * (curr[0] + next[0]);
+            surfaceNormal[2] += (curr[0] - next[0]) * (curr[1] + next[1]);
+        });
+    }
 
     return surfaceNormal;
 };
 
+// argument vertices, all indices for that vertice
 export const getVerticesWithSurfaceNormal = (vertices, indices) => {
-    const surfaceNormal = [];
     const verticesWithNormal = [];
 
     let i = 0;
     indices.forEach(val => {
-        surfaceNormal.push(getFaceSurfaceNormal(vertices, val));
         val.forEach(index => {
-            verticesWithNormal.push(...vertices[index], ...(surfaceNormal[i]));
+            verticesWithNormal.push(...vertices[index], ...(getFaceSurfaceNormal(vertices, val)));
         })
         i++;
     });
