@@ -10,5 +10,5 @@
 - Top Right
 ![right](./img/right.jpeg)
 
-## Assignment
-I'm using the top front and top left pictures for my webgl application. The result can be seen [here](https://raassh-23.github.io/computer-graphics-assignment-1/).
+## Assignment 
+I'm using the top front and top left pictures for my webgl application. The result for 2D rendering can be seen [here](https://raassh-23.github.io/computer-graphics-assignment-1/) and 3D rendering can be seen [here](https://raassh-23.github.io/computer-graphics-assignment-2/).
