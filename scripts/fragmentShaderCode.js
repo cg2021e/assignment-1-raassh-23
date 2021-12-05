@@ -26,8 +26,7 @@ export const fragmentShaderCode = `
 
         vec3 diffuse = vec3(0.0, 0.0, 0.0);
         if (cosTheta > 0.) {
-            float diffuseIntensity = cosTheta;
-            diffuse = uLightConstant * diffuseIntensity;
+            diffuse = uLightConstant * cosTheta;
         }
 
         vec3 reflector = reflect(-lightDirection, normalizedNormal);
