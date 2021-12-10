@@ -90,6 +90,8 @@ window.onload = () => {
 
     const uShininessConstant = gl.getUniformLocation(shaderProgram, "uShininessConstant");
 
+    const uIsOn = gl.getUniformLocation(shaderProgram, "uIsOn");
+
     const scale = 0.8;
     const uScale = gl.getUniformLocation(shaderProgram, "uScale");
     gl.uniform1f(uScale, scale);
@@ -124,10 +126,21 @@ window.onload = () => {
     const shininessConstants = [5, 200, 0, 0];
     const ambientIntensities = [0.340, 0.340, 1, 1];
 
+    let isOn = true;
+    window.addEventListener("keydown", (e) => {
+        if (e.code == "Space") {
+            isOn = !isOn;
+            ambientIntensities[2] = isOn;
+        }
+    });
+
+
     function render() {
         gl.enable(gl.DEPTH_TEST);
         gl.clearColor(0.9, 0.9, 0.9, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        gl.uniform1i(uIsOn, isOn);
 
         let count = 0;
         indicesCount.forEach((v, i) => {

@@ -15,6 +15,8 @@ export const fragmentShaderCode = `
 
     uniform float uShininessConstant;
 
+    uniform bool uIsOn;
+
     void main() {
         vec3 ambient = uLightConstant * uAmbientIntensity;
 
@@ -25,7 +27,7 @@ export const fragmentShaderCode = `
         float cosTheta = dot(normalizedNormal, normalizedLight);
 
         vec3 diffuse = vec3(0.0, 0.0, 0.0);
-        if (cosTheta > 0.) {
+        if (cosTheta > 0. && uIsOn) {
             diffuse = uLightConstant * cosTheta;
         }
 
@@ -35,7 +37,7 @@ export const fragmentShaderCode = `
         float cosPhi = dot(normalizedReflector, normalizedViewer);
 
         vec3 specular = vec3(0.0, 0.0, 0.0);
-        if (cosPhi > 0.0) {
+        if (cosPhi > 0.0 && uIsOn) {
             float specularIntensity = pow(cosPhi, uShininessConstant);
             specular = uLightConstant * specularIntensity;
         }
