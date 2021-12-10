@@ -253,14 +253,14 @@ window.onload = () => {
         mat4.lookAt(view, curCameraPosition, [0, 0, 0], [0, 1, 0]);
 
         gl.uniformMatrix4fv(uView, false, view);
-        gl.uniform3fv(uViewerPosition, camera);
+        gl.uniform3fv(uViewerPosition, curCameraPosition);
 
         // model for cube;
         mat4.multiply(models[2], mat4.create(), rotation);
         mat4.translate(models[2], models[2], lightCube);
 
         gl.uniform3fv(uLightPosition, lightCube);
-        gl.uniformMatrix4fv(uModelLight, false,  models[2])
+        gl.uniformMatrix4fv(uModelLight, false, models[2])
         gl.uniform1i(uIsOn, isOn);
 
         let count = 0;
