@@ -164,3 +164,7 @@ export const indicesCube = [
     [0, 1, 4], [4, 1, 5],
     [2, 3, 6], [6, 3, 7],   
 ];
+
+export const indicesPlane = [
+    [0, 1, 2], [1, 3, 2],
+];

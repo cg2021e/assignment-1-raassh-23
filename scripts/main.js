@@ -1,7 +1,7 @@
 import { vertexShaderCode } from './vertexShaderCode.js';
 import { fragmentShaderCode } from './fragmentShaderCode.js';
-import { verticesEraser, verticesCube } from './vertices.js';
-import { indicesEraser, indicesCube } from './indices.js';
+import { verticesEraser, verticesCube, verticesPlane } from './vertices.js';
+import { indicesEraser, indicesCube, indicesPlane } from './indices.js';
 import { mat4, mat3 } from "./gl-matrix/index.js";
 import { mergeIndices, mergeVertices, getAllVerticesWithSurfaceNormal } from "./utils.js";
 
@@ -20,6 +20,7 @@ window.onload = () => {
         [verticesEraser, indicesEraser],
         [verticesEraser, indicesEraser],
         [verticesCube, indicesCube],
+        [verticesPlane, indicesPlane],
     ];
 
     const [indicesCount,] = mergeIndices(...verticeAndIndices.map((elem => elem[1])));
@@ -89,13 +90,14 @@ window.onload = () => {
 
     const uShininessConstant = gl.getUniformLocation(shaderProgram, "uShininessConstant");
 
+    const scale = 0.8;
     const uScale = gl.getUniformLocation(shaderProgram, "uScale");
-    gl.uniform1f(uScale, 0.8);
+    gl.uniform1f(uScale, scale);
 
     const camera = [0, 1, 3];
     const lightCube = [0, 0, 1];
 
-    const models = [mat4.create(), mat4.create(), mat4.create()];
+    const models = [mat4.create(), mat4.create(), mat4.create(), mat4.create()];
 
     // model for left 
     mat4.translate(models[0], models[0], [-0.7, 0, 0]);
@@ -104,9 +106,12 @@ window.onload = () => {
     mat4.translate(models[1], models[1], [0.7, 0, 0]);
     mat4.rotateY(models[1], models[1], -Math.PI / 2);
 
-    // model for cube
-    models[2] = mat4.create();
+    // model for cube;
     mat4.translate(models[2], models[2], lightCube);
+
+    // model for plane
+    const bottomVertices = Math.min(...verticesEraser.map(elem => elem[1]));
+    mat4.translate(models[3], models[3], [0, bottomVertices*scale, 0]);
 
     const view = mat4.create();
     mat4.lookAt(view, camera, [camera[0], -0.1, 0], [0, 1, 0]);
@@ -116,8 +121,8 @@ window.onload = () => {
     gl.uniform3fv(uLightPosition, lightCube);
 
     // constant for each model
-    const shininessConstants = [5, 200, 0];
-    const ambientIntensities = [0.340, 0.340, 1];
+    const shininessConstants = [5, 200, 0, 0];
+    const ambientIntensities = [0.340, 0.340, 1, 1];
 
     function render() {
         gl.enable(gl.DEPTH_TEST);
