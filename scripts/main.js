@@ -2,7 +2,7 @@ import { vertexShaderCode } from './vertexShaderCode.js';
 import { fragmentShaderCode } from './fragmentShaderCode.js';
 import { verticesEraser, verticesCube, verticesPlane } from './vertices.js';
 import { indicesEraser, indicesCube, indicesPlane } from './indices.js';
-import { mat4, mat3, vec3 } from "./gl-matrix/index.js";
+import { mat4, mat3, vec3, quat } from "./gl-matrix/index.js";
 import { mergeIndices, mergeVertices, getAllVerticesWithSurfaceNormal } from "./utils.js";
 
 window.onload = () => {
@@ -126,7 +126,7 @@ window.onload = () => {
 
     const cameraRotateSpeed = 0.01;
     let cameraRotateDir = 0; // 0 - nothing, 1 - rotate right, -1 - rotate left
-    let rotation = 0;
+    let cameraRotation = 0;
 
     let isOn = true;
     window.addEventListener("keydown", (e) => {
@@ -166,6 +166,68 @@ window.onload = () => {
         if (e.code === 'ArrowRight' || e.code === 'ArrowLeft') cameraRotateDir = 0;
     });
 
+    let lastPointOnTrackBall, currentPointOnTrackBall;
+    let lastQuat = quat.create();
+    function computeCurrentQuat() {
+        const axisFromCrossProduct = vec3.cross(vec3.create(), lastPointOnTrackBall, currentPointOnTrackBall);
+        const angleFromDotProduct = Math.acos(vec3.dot(lastPointOnTrackBall, currentPointOnTrackBall));
+        const rotationQuat = quat.setAxisAngle(quat.create(), axisFromCrossProduct, angleFromDotProduct);
+        quat.normalize(rotationQuat, rotationQuat);
+        return quat.multiply(quat.create(), rotationQuat, lastQuat);
+    }
+
+    function getProjectionPointOnSurface(point) {
+        const radius = canvas.width / 2;
+        const center = vec3.fromValues(window.innerWidth / 2, window.innerHeight / 2, 0);
+        const pointVector = vec3.subtract(vec3.create(), point, center);
+        pointVector[1] = pointVector[1] * (-1);
+        const radius2 = radius * radius;
+        const length2 = pointVector[0] * pointVector[0] + pointVector[1] * pointVector[1];
+        if (length2 <= radius2) pointVector[2] = Math.sqrt(radius2 - length2);
+        else {
+            pointVector[0] *= radius / Math.sqrt(length2);
+            pointVector[1] *= radius / Math.sqrt(length2);
+            pointVector[2] = 0;
+        }
+        return vec3.normalize(vec3.create(), pointVector);
+    }
+
+    const rotation = mat4.create();
+    let dragging;
+
+    document.addEventListener("mousedown", (e) => {
+        const x = e.clientX;
+        const y = e.clientY;
+        const rect = e.target.getBoundingClientRect();
+        if (
+            rect.left <= x &&
+            rect.right >= x &&
+            rect.top <= y &&
+            rect.bottom >= y
+        ) {
+            dragging = true;
+        }
+
+        lastPointOnTrackBall = getProjectionPointOnSurface(vec3.fromValues(x, y, 0));
+        currentPointOnTrackBall = lastPointOnTrackBall;
+    });
+
+    document.addEventListener("mouseup", (e) => {
+        dragging = false;
+        if (currentPointOnTrackBall != lastPointOnTrackBall) {
+            lastQuat = computeCurrentQuat();
+        }
+    });
+
+    document.addEventListener("mousemove", (e) => {
+        if (dragging) {
+            var x = event.clientX;
+            var y = event.clientY;
+            currentPointOnTrackBall = getProjectionPointOnSurface(vec3.fromValues(x, y, 0));
+            mat4.fromQuat(rotation, computeCurrentQuat());
+        }
+    });
+
 
     function render() {
         gl.enable(gl.DEPTH_TEST);
@@ -175,24 +237,25 @@ window.onload = () => {
         lightCube[0] += lightCubeMoveDirX * lightCubeSpeed;
         lightCube[2] += -lightCubeMoveDirZ * lightCubeSpeed;
 
-        rotation += cameraRotateDir * cameraRotateSpeed;
+        cameraRotation += cameraRotateDir * cameraRotateSpeed;
 
         const view = mat4.create();
-        const angle = vec3.angle(camera, [0,0,0]);
-        const curDistance = vec3.distance(camera, [0,0,0]);
+        const angle = vec3.angle(camera, [0, 0, 0]);
+        const curDistance = vec3.distance(camera, [0, 0, 0]);
         const newDistance = curDistance - zoomDir * zoomSpeed;
-        if(newDistance >= distanceMin) {
+        if (newDistance >= distanceMin) {
             camera[1] = Math.cos(angle) * newDistance;
             camera[2] = Math.sin(angle) * newDistance;
         }
-        const curCameraPosition = vec3.rotateY(vec3.create(), camera, [0, 0, 0], rotation);
+        const curCameraPosition = vec3.rotateY(vec3.create(), camera, [0, 0, 0], cameraRotation);
         mat4.lookAt(view, curCameraPosition, [0, 0, 0], [0, 1, 0]);
 
         gl.uniformMatrix4fv(uView, false, view);
         gl.uniform3fv(uViewerPosition, camera);
 
         // model for cube;
-        mat4.translate(models[2], mat4.create(), lightCube);
+        mat4.multiply(models[2], mat4.create(), rotation);
+        mat4.translate(models[2], models[2], lightCube);
 
         gl.uniform3fv(uLightPosition, lightCube);
 
