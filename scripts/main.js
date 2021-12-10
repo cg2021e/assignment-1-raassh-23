@@ -90,6 +90,8 @@ window.onload = () => {
 
     const uShininessConstant = gl.getUniformLocation(shaderProgram, "uShininessConstant");
 
+    const uModelLight = gl.getUniformLocation(shaderProgram, "uModelLight");
+
     const uIsOn = gl.getUniformLocation(shaderProgram, "uIsOn");
 
     const objectScale = 0.8;
@@ -221,8 +223,8 @@ window.onload = () => {
 
     document.addEventListener("mousemove", (e) => {
         if (dragging) {
-            var x = event.clientX;
-            var y = event.clientY;
+            var x = e.clientX;
+            var y = e.clientY;
             currentPointOnTrackBall = getProjectionPointOnSurface(vec3.fromValues(x, y, 0));
             mat4.fromQuat(rotation, computeCurrentQuat());
         }
@@ -258,7 +260,7 @@ window.onload = () => {
         mat4.translate(models[2], models[2], lightCube);
 
         gl.uniform3fv(uLightPosition, lightCube);
-
+        gl.uniformMatrix4fv(uModelLight, false,  models[2])
         gl.uniform1i(uIsOn, isOn);
 
         let count = 0;

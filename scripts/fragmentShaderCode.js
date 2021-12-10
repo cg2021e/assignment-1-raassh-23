@@ -17,10 +17,14 @@ export const fragmentShaderCode = `
 
     uniform bool uIsOn;
 
+    uniform mat4 uModelLight;
+
     void main() {
         vec3 ambient = uLightConstant * uAmbientIntensity;
 
-        vec3 lightDirection = uLightPosition - vPosition;
+        vec3 lightPosition = (uModelLight * vec4(uLightPosition, 1.0)).xyz;
+
+        vec3 lightDirection = lightPosition - vPosition;
 
         vec3 normalizedLight = normalize(lightDirection);
         vec3 normalizedNormal = normalize(uNormalModel * vNormal);
